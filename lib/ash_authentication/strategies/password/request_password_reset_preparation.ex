@@ -35,7 +35,7 @@ defmodule AshAuthentication.Strategy.Password.RequestPasswordResetPreparation do
       |> Query.before_action(fn query ->
         Ash.Query.ensure_selected(query, select_for_senders)
       end)
-      |> Query.after_action(&after_action(&1, &2, strategy), context)
+      |> Query.after_action(&after_action(&1, &2, strategy, context))
     else
       query
     end
