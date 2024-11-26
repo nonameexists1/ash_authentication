@@ -19,7 +19,7 @@ defmodule AshAuthentication.Strategy.Password.RequestPasswordResetPreparation do
   @doc false
   @impl true
   @spec prepare(Query.t(), keyword, Preparation.Context.t()) :: Query.t()
-  def prepare(query, _opts, _context) do
+  def prepare(query, _opts, context) do
     strategy = Info.strategy_for_action!(query.resource, query.action.name)
 
     if strategy.resettable do
@@ -35,15 +35,15 @@ defmodule AshAuthentication.Strategy.Password.RequestPasswordResetPreparation do
       |> Query.before_action(fn query ->
         Ash.Query.ensure_selected(query, select_for_senders)
       end)
-      |> Query.after_action(&after_action(&1, &2, strategy))
+      |> Query.after_action(&after_action(&1, &2, strategy), context)
     else
       query
     end
   end
 
-  defp after_action(_query, [user], %{resettable: %{sender: {sender, send_opts}}} = strategy) do
+  defp after_action(_query, [user], %{resettable: %{sender: {sender, send_opts}}} = strategy, context) do
     case Password.reset_token_for(strategy, user) do
-      {:ok, token} -> sender.send(user, token, send_opts)
+      {:ok, token} -> sender.send(user, token, Keyword.put(send_opts, :tenant, context.tenant))
       _ -> nil
     end
 

@@ -15,7 +15,7 @@ defmodule AshAuthentication.Strategy.Password.RequestPasswordReset do
 
   @doc false
   @impl true
-  def run(action_input, opts, _context) do
+  def run(action_input, opts, context) do
     read_action = opts[:action]
 
     strategy = Info.strategy_for_action!(action_input.resource, action_input.action.name)
@@ -38,7 +38,7 @@ defmodule AshAuthentication.Strategy.Password.RequestPasswordReset do
 
       with {:ok, user} when not is_nil(user) <- query_result,
            {:ok, token} <- Password.reset_token_for(strategy, user) do
-        sender.send(user, token, send_opts)
+        sender.send(user, token, Keyword.put(send_opts, :tenant, context.tenant))
 
         :ok
       else
